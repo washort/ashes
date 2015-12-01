@@ -18,28 +18,12 @@ DEBUG = True
 
 import pymongo
 
-if 'VMC_APP_PORT' in os.environ:
-    port = int(os.getenv('VMC_APP_PORT'))
-    j = json.loads(os.getenv('VMC_SERVICES'))
-    mongodb = j[0]
-else:
+mongouri = os.getenv('MONGOLAB_URI')
+if not mongouri:
     # this is localhost
-    port = 8888
-    mongodb = dict(options=dict(
-        hostname='localhost', port=27017, db='db'))
+    mongouri = 'mongodb://localhost:27017'
 
-if 'username' in mongodb['options']:
-    mongouri = 'mongodb://{username}:{password}@{hostname}:{port}/{db}'
-else:
-    mongouri = 'mongodb://{hostname}:{port}'
-mongouri = mongouri.format(**mongodb['options'])
-
-try:
-    mongo = pymongo.Connection(mongouri)
-    db = mongo.db
-except Exception:
-    print "MongoDB not found"
-    sys.exit()
+db = pymongo.MongoClient(mongouri).get_default_database()
 
 
 def sslify(resp):
@@ -97,7 +81,7 @@ app.route = corsify
 def verify_assertion(assertion):
     query_args = {
         'assertion': assertion,
-        'audience': 'https://ashes.paas.allizom.org',
+        'audience': 'https://mkt-ashes.herokuapp.com',
         # 'audience': 'http://localhost:5000',
     }
     encoded_args = urllib.urlencode(query_args)
